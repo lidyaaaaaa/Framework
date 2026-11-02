@@ -32,6 +32,7 @@ import { Order } from './orders/entities/orders.entiity.js';
 import { Payment } from './payments/entities/payment.entity.js';
 import { Publisher } from './publishers/entities/publisher.entity.js';
 import { Shipment } from './shipments/entities/shipment.entity.js';
+import { BanksModule } from './banks/banks.module.js';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { Shipment } from './shipments/entities/shipment.entity.js';
     PaymentsModule,
     PublishersModule,
     ShipmentsModule,
+    BanksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

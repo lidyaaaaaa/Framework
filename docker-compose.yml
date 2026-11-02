@@ -4,8 +4,8 @@ services:
     container_name: harkat_postgres_container
     restart: always
     environment:
-      POSTGRES_USER: hammam
-      POSTGRES_PASSWORD: hammamghazi2006
+      POSTGRES_USER: moliw
+      POSTGRES_PASSWORD: moli2006
       POSTGRES_DB: harkat_kelas_d
     ports:
       #format: "PortKomputerKalian:PortKomputerContainerDocker"
