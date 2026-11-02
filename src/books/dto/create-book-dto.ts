@@ -2,32 +2,50 @@ import {
   IsBoolean,
   IsInt,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
   IsString,
   IsUUID,
+  MaxLength,
+  Min,
 } from 'class-validator';
 
 export class CreateBookDto {
-  @IsNotEmpty({ message: 'Title is required' })
-  @IsString({ message: 'Title must be a string' })
+  @IsNotEmpty({ message: 'Judul buku wajib diisi' })
+  @IsString({ message: 'Judul buku harus berupa teks' })
+  @MaxLength(30)
   readonly title: string;
 
-  @IsNotEmpty({ message: 'Author is required' })
-  @IsString({ message: 'Author must be a string' })
-  readonly author: string;
-
-  @IsNotEmpty({ message: 'ISBN is required' })
-  @IsString({ message: 'ISBN must be a string' })
+  @IsNotEmpty({ message: 'ISBN wajib diisi' })
+  @IsString({ message: 'ISBN harus berupa teks' })
+  @MaxLength(45)
   readonly isbn: string;
 
-  @IsNotEmpty({ message: 'Published year is required' })
-  @IsInt({ message: 'Published year must be an integer' })
-  readonly publishedYear: number;
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  readonly publishedYear?: number;
 
-  @IsNotEmpty({ message: 'Availability status is required' })
-  @IsBoolean({ message: 'Availability status must be a boolean' })
-  readonly isAvailable: boolean;
+  @IsOptional()
+  @IsBoolean({ message: 'Status ketersediaan harus berupa true atau false' })
+  readonly isAvailable?: boolean;
 
-  @IsNotEmpty({ message: 'Category ID is required' })
-  @IsUUID('4', { message: 'Category ID must be a UUID' })
-  readonly category_id: string;
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  readonly price?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  readonly stock?: number;
+
+  @IsOptional()
+  @IsUUID()
+  readonly categoryId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  readonly publisherId?: string;
 }

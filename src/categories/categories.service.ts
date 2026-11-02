@@ -1,37 +1,54 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Not, Repository } from 'typeorm';
 import { Category } from './entities/categories.entity.js';
+import { CreateCategoryDto } from './dto/create-category-dto.js';
+import { UpdateCategoryDto } from './dto/update-category-dto.js';
 
 @Injectable()
 export class CategoriesService {
-  private categories: Category[] = [
-    {
-      id: '550e8400-e29b-41d4-a716-446655440001',
-      name: 'Fiction',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-    {
-      id: '550e8400-e29b-41d4-a716-446655440002',
-      name: 'Non-Fiction',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-    {
-      id: '550e8400-e29b-41d4-a716-446655440003',
-      name: 'Science Fiction',
-      created_at: new Date(),
-      updated_at: new Date(),
-    },
-  ];
+  constructor(
+    @InjectRepository(Category)
+    private readonly categoriesRepository: Repository<Category>,
+  ) {}
 
+  findAll(): Promise<Category[]> {
+    return this.categoriesRepository.find();
+  }
 
-    // Menampilkan semua kategori
-    findAll(): Category[] {
-      return this.categories;
+  async findById(id: string): Promise<Category> {
+    const category = await this.categoriesRepository.findOne({ where: { id } });
+    if (!category) throw new NotFoundException(`Category dengan id ${id} tidak ditemukan`);
+    return category;
+  }
+
+  async create(input: CreateCategoryDto): Promise<Category> {
+    const existing = await this.categoriesRepository.findOne({
+      where: { name: input.categoryName },
+    });
+    if (existing) throw new ConflictException(`Kategori "${input.categoryName}" sudah terdaftar`);
+
+    const category = this.categoriesRepository.create({ name: input.categoryName });
+    return this.categoriesRepository.save(category);
+  }
+
+  async update(id: string, input: UpdateCategoryDto): Promise<Category> {
+    const category = await this.findById(id);
+
+    if (input.categoryName) {
+      const existing = await this.categoriesRepository.findOne({
+        where: { name: input.categoryName, id: Not(id) },
+      });
+      if (existing) throw new ConflictException(`Kategori "${input.categoryName}" sudah terdaftar`);
+      category.name = input.categoryName;
     }
-  
-    // Menampilkan kategori berdasarkan ID
-    findById(id: string): Category | undefined {
-      return this.categories.find((category) => category.id === id);
-    }
+
+    return this.categoriesRepository.save(category);
+  }
+
+  async remove(id: string): Promise<boolean> {
+    const category = await this.findById(id);
+    await this.categoriesRepository.remove(category);
+    return true;
+  }
 }

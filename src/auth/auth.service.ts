@@ -1,68 +1,80 @@
-import { Injectable } from '@nestjs/common';
-import { randomBytes } from 'crypto';
-import { Auth } from './entites/auth.entity.js';
-import { LoginDto } from './dto/login-dto.js';
-import { RegisterDto } from './dto/register-dto.js';
-import { ForgotPasswordDto } from './dto/forgot-password-dto.js';
-import { ResetPasswordDto } from './dto/reset-password-dto.js';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { AuthAccount, PublicAuthAccount } from './entities/auth.entity.js';
+import { CreateAuthDto } from './dto/create-auth-dto.js';
+import { LoginAuthDto } from './dto/login-auth-dto.js';
+import { UpdateAuthDto } from './dto/update-auth-dto.js';
 
 @Injectable()
 export class AuthService {
-    private users: Auth[] = [];
+	private readonly accounts: AuthAccount[] = [
+		{ id: 1, email: 'admin@example.com', password: this.hashPassword('dummy-admin-password') },
+		{ id: 2, email: 'member@example.com', password: this.hashPassword('dummy-member-password') },
+	];
+	private nextId = 3;
 
-    // register user baru
-    register(inputUser: RegisterDto): Auth | string {
-        if (inputUser.password !== inputUser.password_confirmation) {
-            return 'Konfirmasi password tidak cocok';
-        }
-        const emailExists = this.users.find(user => user.email === inputUser.email);
-        if (emailExists) {
-            return 'Email sudah terdaftar';
-        }
-        const newUser: Auth = {
-            id: this.users.length + 1,
-            name: inputUser.name,
-            email: inputUser.email,
-            password: inputUser.password
-        };
-        this.users.push(newUser);
-        return newUser;
-    }
+	private hashPassword(password: string): string {
+		const salt = randomBytes(16).toString('hex');
+		const hash = scryptSync(password, salt, 64).toString('hex');
+		return `${salt}:${hash}`;
+	}
 
-    // login berdasarkan email dan password
-    login(inputLogin: LoginDto): Auth | string {
-        const user = this.users.find(
-            user => user.email === inputLogin.email && user.password === inputLogin.password
-        );
-        if (!user) {
-            return 'Email atau password salah';
-        }
-        return user;
-    }
+	private passwordMatches(password: string, storedPassword: string): boolean {
+		const [salt, storedHash] = storedPassword.split(':');
+		if (!salt || !storedHash) return false;
 
-    // membuat token reset password
-    forgotPassword(inputForgot: ForgotPasswordDto): { token: string } | string {
-        const user = this.users.find(user => user.email === inputForgot.email);
-        if (!user) {
-            return 'Email tidak ditemukan';
-        }
-        user.reset_token = randomBytes(16).toString('hex');
-        user.reset_token_expires = new Date(Date.now() + 15 * 60 * 1000);
-        return { token: user.reset_token };
-    }
+		const expected = Buffer.from(storedHash, 'hex');
+		const actual = scryptSync(password, salt, expected.length);
+		return expected.length === actual.length && timingSafeEqual(expected, actual);
+	}
 
-    // reset password memakai token
-    resetPassword(inputReset: ResetPasswordDto): string {
-        if (inputReset.password !== inputReset.password_confirmation) {
-            return 'Konfirmasi password tidak cocok';
-        }
-        const user = this.users.find(user => user.reset_token === inputReset.token);
-        if (!user || !user.reset_token_expires || user.reset_token_expires < new Date()) {
-            return 'Token tidak valid atau sudah kedaluwarsa';
-        }
-        user.password = inputReset.password;
-        user.reset_token = undefined;
-        user.reset_token_expires = undefined;
-        return 'Password berhasil direset';
-    }
+	findAll(): PublicAuthAccount[] {
+		return this.accounts.map(({ id, email }) => ({ id, email }));
+	}
+
+	findById(id: number): PublicAuthAccount {
+		const account = this.accounts.find((item) => item.id === id);
+		if (!account) throw new NotFoundException(`Account with id ${id} not found`);
+		return { id: account.id, email: account.email };
+	}
+
+	register(input: CreateAuthDto): PublicAuthAccount {
+		const email = input.email.trim().toLowerCase();
+		if (this.accounts.some((account) => account.email.toLowerCase() === email)) {
+			throw new ConflictException('Email is already registered');
+		}
+
+		const account: AuthAccount = {
+			id: this.nextId++,
+			email,
+			password: this.hashPassword(input.password),
+		};
+		this.accounts.push(account);
+		return { id: account.id, email: account.email };
+	}
+
+	login(input: LoginAuthDto): PublicAuthAccount {
+		const email = input.email.trim().toLowerCase();
+		const account = this.accounts.find((item) => item.email.toLowerCase() === email);
+		if (!account || !this.passwordMatches(input.password, account.password)) {
+			throw new UnauthorizedException('Invalid email or password');
+		}
+		return { id: account.id, email: account.email };
+	}
+
+	update(id: number, input: UpdateAuthDto): PublicAuthAccount {
+		const account = this.accounts.find((item) => item.id === id);
+		if (!account) throw new NotFoundException(`Account with id ${id} not found`);
+
+		Object.assign(account, input);
+		return { id: account.id, email: account.email };
+	}
+
+	remove(id: number): boolean {
+		const accountIndex = this.accounts.findIndex((item) => item.id === id);
+		if (accountIndex === -1) throw new NotFoundException(`Account with id ${id} not found`);
+
+		this.accounts.splice(accountIndex, 1);
+		return true;
+	}
 }

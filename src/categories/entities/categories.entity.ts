@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,9 +15,12 @@ export class Category {
   @Column({ type: 'varchar', length: 100, unique: true })
   name: string;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-  created_at: Date;
+  @OneToMany('Book', 'category')
+  books: any[];
 
-  @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
-  updated_at: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

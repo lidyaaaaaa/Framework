@@ -5,49 +5,54 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Category } from '../../categories/entities/categories.entity.js';
-  import { Publisher } from '../../publishers/entities/publisher.entities.js';
 
-  @Entity({ name: 'books' })
-  export class Book {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+@Entity({ name: 'books' })
+export class Book {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({ type: 'varchar', length: 30 })
-    title: string;
+  @Column({ type: 'varchar', length: 30 })
+  title: string;
 
-    @Column({ type: 'varchar', length: 45 })
-    isbn: string;
+  @Column({ type: 'varchar', length: 45, unique: true })
+  isbn: string;
 
-    @Column({ type: 'int', default: 0 })
-    publishedYear: number;
+  @Column({ type: 'int', default: 0, name: 'published_year' })
+  publishedYear: number;
 
-    @Column({ type: 'boolean', default: true })
-    isAvailable: boolean;
+  @Column({ type: 'boolean', default: true, name: 'is_available' })
+  isAvailable: boolean;
 
-    @Column({ type: 'uuid', name: 'category_id' })
-    category_id: string;
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  price: number;
 
-    @ManyToOne(() => Category, { nullable: false })
-    @JoinColumn({ name: 'category_id' })
-    category: Category;
+  @Column({ type: 'int', default: 0 })
+  stock: number;
 
-    @Column({ type: 'uuid', name: 'publisher_id' })
-    publisher_id: string;
+  @ManyToOne('Category', 'books', { nullable: true })
+  @JoinColumn({ name: 'category_id' })
+  category: any;
 
-    @ManyToOne(() => Publisher, (publisher) => publisher.books, { nullable: false })
-    @JoinColumn({ name: 'publisher_id' })
-    publisher: Publisher;
+  @ManyToOne('Publisher', 'books', { nullable: true })
+  @JoinColumn({ name: 'publisher_id' })
+  publisher: any;
 
-    @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-    createdAt: Date;
+  @OneToMany('BookAuthor', 'book')
+  bookAuthors: any[];
 
-    @UpdateDateColumn({ type: 'timestamp', name: 'updated_at' })
-    updatedAt: Date;
+  @OneToMany('OrderItem', 'book')
+  orderItems: any[];
 
-    @DeleteDateColumn({ type: 'timestamp', name: 'deleted_at', nullable: true })
-    deletedAt: Date;
-  }
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date | null;
+}

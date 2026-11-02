@@ -1,16 +1,18 @@
 services:
   postgres-db:
     image: postgres:16-alpine
-    container_name: basegezsyx
+    container_name: harkat_postgres_container
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: basegezsyx
+      POSTGRES_USER: hammam
+      POSTGRES_PASSWORD: hammamghazi2006
+      POSTGRES_DB: harkat_kelas_d
     ports:
-     - "5432:5432"
+      #format: "PortKomputerKalian:PortKomputerContainerDocker"
+      - "5432:5432"
     volumes:
-     - postgres_data_volume:/var/lib/postgresql/data
+      #menyimpan data database ke dalam volume disk laptop agar tidak hilang
+      - postgres_data_volume:/var/lib/postgresql/data
 
 volumes:
   postgres_data_volume:

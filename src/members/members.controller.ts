@@ -1,36 +1,34 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { MembersService } from './members.service.js';
-import { UpdateMembersDto } from './dto/update-members-dto.js';
-import { CreateMembersDto } from './dto/create-members-dto.js';
+import { CreateMemberDto } from './dto/create-members-dto.js';
+import { UpdateMemberDto } from './dto/update-members-dto.js';
 
 @Controller('members')
 export class MembersController {
-
   constructor(private readonly membersService: MembersService) {}
 
   @Get()
-  findall() {
+  findAll() {
     return this.membersService.findAll();
   }
 
-  @Get('/:id')
-  findById(@Param('id') id: string) {
-    return this.membersService.findById(parseInt(id));
+  @Get(':id')
+  findById(@Param('id', ParseIntPipe) id: number) {
+    return this.membersService.findById(id);
   }
 
   @Post()
-  create(@Body() createMembersDto: CreateMembersDto) {
-    return this.membersService.create(createMembersDto);
+  create(@Body() input: CreateMemberDto) {
+    return this.membersService.create(input);
   }
 
-  @Patch('/:id')
-  update(@Param('id') id: string, @Body() updateMembersDto: UpdateMembersDto) {
-    return this.membersService.update(parseInt(id), updateMembersDto);
+  @Patch(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() input: UpdateMemberDto) {
+    return this.membersService.update(id, input);
   }
 
-  @Delete('/:id')
-  delete(@Param('id') id: string) {
-    return this.membersService.delete(parseInt(id));
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.membersService.remove(id);
   }
-
 }

@@ -3,35 +3,31 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Order } from '../../orders/entities/order.entities.js';
 
 @Entity({ name: 'payments' })
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'order_id' })
-  order_id: string;
-
-  @ManyToOne(() => Order, { nullable: false })
+  @OneToOne('Order', 'payment')
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order: any;
 
   @Column({ type: 'varchar', length: 50, name: 'payment_method' })
   paymentMethod: string;
 
   @Column({ type: 'decimal', precision: 12, scale: 2 })
-  amount: string;
+  amount: number;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, default: 'pending' })
   status: string;
 
-  @Column({ type: 'timestamp', name: 'paid_at', nullable: true })
+  @Column({ type: 'timestamp', nullable: true, name: 'paid_at' })
   paidAt: Date | null;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

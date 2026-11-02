@@ -5,19 +5,15 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Order } from '../../orders/entities/order.entities.js';
 
 @Entity({ name: 'shipments' })
 export class Shipment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', name: 'order_id', unique: true })
-  order_id: string;
-
-  @OneToOne(() => Order, { nullable: false })
+  @OneToOne('Order', 'shipment')
   @JoinColumn({ name: 'order_id' })
-  order: Order;
+  order: any;
 
   @Column({ type: 'varchar', length: 100 })
   courier: string;
@@ -25,12 +21,12 @@ export class Shipment {
   @Column({ type: 'varchar', length: 100, nullable: true, name: 'tracking_number' })
   trackingNumber: string | null;
 
-  @Column({ type: 'varchar', length: 30 })
+  @Column({ type: 'varchar', length: 30, default: 'pending' })
   status: string;
 
-  @Column({ type: 'timestamp', name: 'shipped_at', nullable: true })
+  @Column({ type: 'timestamp', nullable: true, name: 'shipped_at' })
   shippedAt: Date | null;
 
-  @Column({ type: 'timestamp', name: 'delivered_at', nullable: true })
+  @Column({ type: 'timestamp', nullable: true, name: 'delivered_at' })
   deliveredAt: Date | null;
 }
